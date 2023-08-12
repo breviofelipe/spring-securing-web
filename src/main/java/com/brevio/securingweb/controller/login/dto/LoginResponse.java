@@ -1,8 +1,7 @@
-package com.brevio.securingweb.controller.dto;
+package com.brevio.securingweb.controller.login.dto;
 
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 
 @Data
