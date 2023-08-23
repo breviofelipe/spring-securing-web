@@ -1,10 +1,10 @@
 package com.brevio.securingweb.service.impl;
 
 import com.brevio.securingweb.model.*;
+import com.brevio.securingweb.repository.UserRepository;
 import com.brevio.securingweb.service.AuthenticationService;
 import com.brevio.securingweb.service.JwtService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -17,26 +17,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-
+    private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     @Override
     public JwtAuthenticationResponse signup(SignUpRequest request) {
         var user = User.builder().firstName(request.getFirstName()).lastName(request.getLastName())
                 .email(request.getEmail()).password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.USER).build();
-
+        userRepository.save(user);
         var jwt = jwtService.generateToken(user);
         return JwtAuthenticationResponse.builder().token(jwt).build();
     }
 
     @Override
     public JwtAuthenticationResponse signin(SigninRequest request) {
-        UsernamePasswordAuthenticationToken userT = new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());
-        Authentication authenticate = authenticationManager.authenticate(userT);
-        authenticate.getCredentials();
-        var user = User.builder().firstName("").lastName("")
-                .email(request.getEmail()).password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER).build();
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+        var user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("Usuario ou senha invalido."));
         var jwt = jwtService.generateToken(user);
         return JwtAuthenticationResponse.builder().token(jwt).build();
     }

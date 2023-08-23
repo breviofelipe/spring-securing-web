@@ -1,5 +1,6 @@
 package com.brevio.securingweb.service.impl;
 
+import com.brevio.securingweb.repository.UserRepository;
 import com.brevio.securingweb.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -15,20 +16,11 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private final UserDetailsService userDetails;
+    private final UserRepository userRepository;
 
     @Override
     public UserDetailsService userDetailsService() {
-        return new UserDetailsService() {
-            @Override
-            public UserDetails loadUserByUsername(String username) {
-                try {
-                   return userDetails.loadUserByUsername(username);
-                } catch (Exception e){
-                    throw new UsernameNotFoundException("User not found");
-                }
-            }
-        };
+        return username -> userRepository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario nao encontrado"));
     }
-
 }
